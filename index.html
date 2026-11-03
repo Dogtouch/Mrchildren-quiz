@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ミスチルクイズ">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<title>ミスチル 収録アルバム当てクイズ</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --card:#ffffff; --ink:#1d1d1f; --sub:#6b6b70; --line:#e4e1d9;
+    --accent:#1f4e79; --accent-ink:#ffffff; --ok:#1f8a4c; --ok-bg:#e6f4ec; --ng:#c0392b; --ng-bg:#fbe9e7;
+    --sel:#f2c94c; --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141416; --card:#1f1f23; --ink:#f2f2f4; --sub:#a0a0a8; --line:#33333a;
+      --accent:#5b9bd5; --accent-ink:#0d1520; --ok:#4cc38a; --ok-bg:#16301f; --ng:#ff7b6b; --ng-bg:#3a1c19; }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
+    line-height:1.5}
+  body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  body.noscroll{overflow:hidden}
+  .wrap{max-width:520px;margin:0 auto;padding:16px 16px 140px}
+  header h1{font-size:20px;margin:8px 0 2px;letter-spacing:.02em}
+  header p{margin:0 0 16px;color:var(--sub);font-size:13px}
+  section{display:none} section.active{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 10px}
+  .muted{color:var(--sub);font-size:13px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:999px;
+    padding:6px 10px;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--c);opacity:.35}
+  .chip.on{color:var(--ink);border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+  .chip.on .dot{opacity:1}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .quick button{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{flex:1;padding:10px 4px;border:0;background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+  .seg.big button{padding:12px 4px;font-size:14.5px}
+  .sub-h{font-size:13px;color:var(--sub);margin:14px 0 6px}
+  .sub-h:first-of-type{margin-top:0}
+  .hint{font-size:12px;color:var(--sub);margin-top:6px}
+  .btn{display:block;width:100%;padding:15px;border-radius:12px;border:0;font-size:16px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--accent);color:var(--accent-ink)}
+  .btn.secondary{background:transparent;color:var(--accent);border:1.5px solid var(--accent);margin-top:10px}
+  .btn:disabled{opacity:.4;cursor:default}
+  .topbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--sub);margin-bottom:8px}
+  .topbar b{color:var(--ink)}
+  .quit{background:none;border:0;color:var(--sub);font-size:13px;cursor:pointer;padding:4px 0;text-decoration:underline}
+  .progress{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:14px}
+  .progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  .qcard{text-align:center;padding:26px 16px 22px}
+  .qlabel{font-size:12.5px;color:var(--sub);margin-bottom:10px}
+  .song{font-size:clamp(22px,6.4vw,30px);font-weight:800;line-height:1.3;word-break:break-word}
+  .opts{display:grid;gap:10px}
+  .opt{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:14px;border-radius:12px;
+    background:var(--card);border:1.5px solid var(--line);color:var(--ink);cursor:pointer;font-size:15.5px;min-height:58px}
+  .opt .sw{flex:0 0 6px;align-self:stretch;border-radius:3px;background:var(--c)}
+  .opt .t{flex:1;font-weight:600;line-height:1.3}
+  .opt .y{font-size:12px;color:var(--sub);white-space:nowrap}
+  .opt.correct{border-color:var(--ok);background:var(--ok-bg)}
+  .opt.wrong{border-color:var(--ng);background:var(--ng-bg)}
+  .opt.dim{opacity:.45}
+  .opt:disabled{cursor:default}
+  .feedback{margin-top:14px;padding:14px;border-radius:12px;font-size:14px;display:none}
+  .feedback.show{display:block}
+  .feedback.ok{background:var(--ok-bg);color:var(--ok)}
+  .feedback.ng{background:var(--ng-bg);color:var(--ng)}
+  .feedback .detail{color:var(--ink);margin-top:4px;font-size:13.5px}
+  .bottom{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,var(--bg) 70%,transparent);display:none;z-index:5}
+  .bottom.show{display:block}
+  .bottom .btn{max-width:488px;margin:0 auto}
+  .score-big{text-align:center;padding:24px 16px}
+  .score-big .n{font-size:48px;font-weight:800;line-height:1.1}
+  .score-big .n small{font-size:20px;color:var(--sub);font-weight:600}
+  .score-big .msg{margin-top:6px;color:var(--sub)}
+  .miss{list-style:none;margin:0;padding:0}
+  .miss li{padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+  .miss li:first-child{border-top:0}
+  .miss .s{font-weight:700}
+  .miss .a{color:var(--sub);font-size:12.5px}
+  .stats{display:flex;gap:8px;margin-top:4px}
+  .stats div{flex:1;text-align:center;background:var(--bg);border-radius:10px;padding:8px 4px}
+  .stats b{display:block;font-size:18px}
+  .stats span{font-size:11px;color:var(--sub)}
+  .reset{background:none;border:0;color:var(--sub);font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px;padding:0}
+  .confirm{display:none;margin-top:8px;font-size:12.5px}
+  .confirm.show{display:block}
+  .confirm button{margin-right:6px;font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+  .confirm button.danger{border-color:var(--ng);color:var(--ng)}
+
+  /* 穴埋めモード */
+  .album-head{display:flex;gap:12px;align-items:center;padding:14px 16px}
+  .album-head .sw{width:8px;align-self:stretch;border-radius:4px;background:var(--c)}
+  .album-head .t{font-size:20px;font-weight:800;line-height:1.25;word-break:break-word}
+  .album-head .y{font-size:12.5px;color:var(--sub)}
+  .tracks{list-style:none;margin:0;padding:4px 0}
+  .tracks li{display:flex;align-items:flex-start;gap:10px;padding:7px 14px;border-top:1px solid var(--line);font-size:14.5px}
+  .tracks li:first-child{border-top:0}
+  .tracks .no{flex:0 0 22px;text-align:right;color:var(--sub);font-variant-numeric:tabular-nums;padding-top:3px;font-size:13px}
+  .tracks .fixed{flex:1;padding:3px 0;word-break:break-word}
+  .slot{flex:1;text-align:left;min-height:38px;padding:7px 10px;border-radius:9px;border:1.5px dashed var(--sub);
+    background:var(--bg);color:var(--sub);font-size:14.5px;cursor:pointer;word-break:break-word;line-height:1.35}
+  .slot.filled{border-style:solid;border-color:var(--accent);color:var(--ink);background:color-mix(in srgb,var(--accent) 8%,var(--card))}
+  .slot.active{outline:3px solid var(--sel);outline-offset:1px}
+  .slot.ok{border:1.5px solid var(--ok);background:var(--ok-bg);color:var(--ink)}
+  .slot.ng{border:1.5px solid var(--ng);background:var(--ng-bg);color:var(--ink)}
+  .slot .yours{text-decoration:line-through;color:var(--ng);font-size:13px;display:block}
+  .slot .ans{font-weight:700;display:block}
+  .slot:disabled{cursor:default}
+  .fill-note{font-size:12.5px;color:var(--sub);margin:-4px 2px 12px}
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:10}
+  .sheet-bg.show{display:block}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--card);border-radius:18px 18px 0 0;
+    max-height:70vh;display:none;flex-direction:column;box-shadow:0 -6px 24px rgba(0,0,0,.18);
+    padding-bottom:env(safe-area-inset-bottom)}
+  .sheet.show{display:flex}
+  .sheet-in{max-width:520px;width:100%;margin:0 auto;display:flex;flex-direction:column;min-height:0;flex:1}
+  .sheet-h{padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .sheet-h b{font-size:15px}
+  .sheet-h button{background:none;border:0;color:var(--accent);font-size:14px;cursor:pointer;padding:4px}
+  .cands{overflow-y:auto;padding:4px 16px 16px;display:grid;gap:8px;-webkit-overflow-scrolling:touch}
+  .cand{text-align:left;padding:12px 14px;border-radius:11px;border:1.5px solid var(--line);background:var(--bg);
+    color:var(--ink);font-size:15px;cursor:pointer;line-height:1.35;display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .cand .used{font-size:11.5px;color:var(--sub);white-space:nowrap}
+  .cand.is-used{opacity:.55}
+  .cand.clear{border-style:dashed;color:var(--sub);justify-content:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ミスチル 収録アルバム当てクイズ</h1>
+    <p>オリジナルアルバム20枚・全250曲から出題します。</p>
+  </header>
+
+  <!-- 設定画面 -->
+  <section id="start" class="active">
+    <div class="card">
+      <h2>モード</h2>
+      <div class="seg big" id="modeSeg">
+        <button data-v="album" class="on">曲 → アルバム</button>
+        <button data-v="fill">収録曲の穴埋め</button>
+      </div>
+      <div class="hint" id="modeHint"></div>
+    </div>
+
+    <div class="card">
+      <h2>出題範囲</h2>
+      <div class="quick">
+        <button data-range="all">すべて</button>
+        <button data-range="90">90年代</button>
+        <button data-range="00">2000年代</button>
+        <button data-range="10">2010年〜</button>
+        <button data-range="none">解除</button>
+      </div>
+      <div class="chips" id="albumChips"></div>
+      <div class="hint" id="poolInfo"></div>
+    </div>
+
+    <div class="card">
+      <h2>設定</h2>
+      <div data-for="album">
+        <div class="sub-h">問題数</div>
+        <div class="seg" id="countSeg">
+          <button data-v="10">10問</button><button data-v="20">20問</button><button data-v="50">50問</button><button data-v="0">全曲</button>
+        </div>
+      </div>
+      <div data-for="fill">
+        <div class="sub-h">アルバム数</div>
+        <div class="seg" id="fcountSeg">
+          <button data-v="3">3枚</button><button data-v="5">5枚</button><button data-v="10">10枚</button><button data-v="0">全部</button>
+        </div>
+        <div class="sub-h">1枚あたりの空欄</div>
+        <div class="seg" id="blanksSeg">
+          <button data-v="3">3曲</button><button data-v="5">5曲</button><button data-v="8">8曲</button>
+        </div>
+      </div>
+      <div class="sub-h">難しさ</div>
+      <div class="seg" id="levelSeg">
+        <button data-v="normal">ふつう</button><button data-v="hard">むずかしい</button>
+      </div>
+      <div class="hint" id="levelHint"></div>
+    </div>
+
+    <div class="card">
+      <h2>これまでの成績</h2>
+      <div class="stats">
+        <div><b id="stAns">0</b><span>回答数</span></div>
+        <div><b id="stRate">-</b><span>正答率</span></div>
+        <div><b id="stWeak">0</b><span>苦手な曲</span></div>
+      </div>
+      <button class="reset" id="resetBtn">成績をリセット</button>
+      <div class="confirm" id="resetConfirm">成績と苦手リストを消去しますか？
+        <div style="margin-top:6px"><button class="danger" id="resetYes">消去する</button><button id="resetNo">キャンセル</button></div>
+      </div>
+    </div>
+
+    <button class="btn primary" id="startBtn">スタート</button>
+    <button class="btn secondary" id="weakBtn">苦手な曲だけ復習</button>
+  </section>
+
+  <!-- 曲→アルバム -->
+  <section id="quiz">
+    <div class="topbar">
+      <span><b id="qNo">1</b> / <span id="qTotal">10</span>　正解 <b id="qScore">0</b>　連続 <b id="qStreak">0</b></span>
+      <button class="quit" data-quit>やめる</button>
+    </div>
+    <div class="progress"><i id="bar"></i></div>
+    <div class="card qcard">
+      <div class="qlabel">この曲が収録されているアルバムは？</div>
+      <div class="song" id="song"></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback"></div>
+  </section>
+
+  <!-- 穴埋め -->
+  <section id="fill">
+    <div class="topbar">
+      <span><b id="fNo">1</b> / <span id="fTotal">5</span> 枚目　正解 <b id="fScore">0</b> / <span id="fDone">0</span></span>
+      <button class="quit" data-quit>やめる</button>
+    </div>
+    <div class="progress"><i id="fbar"></i></div>
+    <div class="card album-head" id="fHead"></div>
+    <p class="fill-note" id="fNote"></p>
+    <div class="card" style="padding:0"><ul class="tracks" id="fTracks"></ul></div>
+    <div class="feedback" id="fFeedback"></div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="result">
+    <div class="card score-big">
+      <div class="n" id="rScore">0<small> / 10</small></div>
+      <div class="msg" id="rMsg"></div>
+    </div>
+    <div class="card" id="missCard">
+      <h2>間違えた曲</h2>
+      <ul class="miss" id="missList"></ul>
+    </div>
+    <button class="btn primary" id="againBtn">同じ設定でもう一度</button>
+    <button class="btn secondary" id="retryMissBtn">間違えた曲だけもう一度</button>
+    <button class="btn secondary" id="homeBtn">設定に戻る</button>
+  </section>
+</div>
+
+<div class="bottom" id="bottom"><button class="btn primary" id="nextBtn">次へ</button></div>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-in">
+    <div class="sheet-h"><b id="sheetTitle"></b><button id="sheetClose">閉じる</button></div>
+    <div class="cands" id="cands"></div>
+  </div>
+</div>
+
+<script>
+const ALBUMS = [
+  {t:"EVERYTHING", y:1992, s:["ロード・アイ・ミス・ユー","Mr.Shining Moon","君がいた夏","風 〜The wind knows how I feel〜","ためいきの日曜日","友達のままで","CHILDREN'S WORLD"]},
+  {t:"Kind of Love", y:1992, s:["虹の彼方へ","All by myself","BLUE","抱きしめたい","グッバイ・マイ・グルーミーデイズ","Distance","車の中でかくれてキスをしよう","思春期の夏 〜君との恋が今も牧場に〜","星になれたら","ティーンエイジ・ドリーム","いつの日にか二人で"]},
+  {t:"Versus", y:1993, s:["Another Mind","メインストリートに行こう","and I close to you","Replay","マーマレード・キッス","蜃気楼","逃亡者","LOVE","さよならは夢の中へ","my life"]},
+  {t:"Atomic Heart", y:1994, s:["Printing","Dance Dance Dance","ラヴ コネクション","innocent world","クラスメイト","CROSS ROAD","ジェラシー","Asia (エイジア)","Rain","雨のち晴れ","Round About 〜孤独の肖像〜","Over"]},
+  {t:"深海", y:1996, s:["Dive","シーラカンス","手紙","ありふれたLove Story 〜男女問題はいつも面倒だ〜","Mirror","Making Songs","名もなき詩","So Let's Get Truth","臨時ニュース","マシンガンをぶっ放せ","ゆりかごのある丘から","虜","花 -Mémento-Mori-","深海"]},
+  {t:"BOLERO", y:1997, s:["prologue","Everything (It's you)","タイムマシーンに乗って","Brandnew my lover","【es】 〜Theme of es〜","シーソーゲーム 〜勇敢な恋の歌〜","傘の下の君に告ぐ","ALIVE","幸せのカテゴリー","everybody goes -秩序のない現代にドロップキック-","ボレロ","Tomorrow never knows (remix)"]},
+  {t:"DISCOVERY", y:1999, s:["DISCOVERY","光の射す方へ","Prism","アンダーシャツ","ニシエヒガシエ","Simple","I'll be","#2601","ラララ","終わりなき旅","Image"]},
+  {t:"Q", y:2000, s:["CENTER OF UNIVERSE","その向こうへ行こう","NOT FOUND","スロースターター","Surrender","つよがり","十二月のセントラルパークブルース","友とコーヒーと嘘と胃袋","ロードムービー","Everything is made from a dream","口笛","Hallelujah","安らげる場所"]},
+  {t:"IT'S A WONDERFUL WORLD", y:2002, s:["overture","蘇生","Dear wonderful world","one two three","渇いたKiss","youthful days","ファスナー","Bird Cage","LOVEはじめました","UFO","Drawing","君が好き","いつでも微笑みを","優しい歌","It's a wonderful world"]},
+  {t:"シフクノオト", y:2004, s:["言わせてみてぇもんだ","PADDLE","掌","くるみ","花言葉","Pink 〜奇妙な夢","血の管","空風の帰り道","Any","天頂バス","タガタメ","HERO"]},
+  {t:"I ♥ U", y:2005, s:["Worlds end","Monster","未来","僕らの音","and I love you","靴ひも","CANDY","ランニングハイ","Sign","Door","跳べ","隔たり","潜水"]},
+  {t:"HOME", y:2007, s:["叫び 祈り","Wake me up!","彩り","箒星","Another Story","PIANO MAN","もっと","やわらかい風","フェイク","ポケット カスタネット","SUNRISE","しるし","通り雨","あんまり覚えてないや"]},
+  {t:"SUPERMARKET FANTASY", y:2008, s:["終末のコンフィデンスソング","HANABI","エソラ","声","少年","旅立ちの唄","口がすべって","水上バス","東京","ロックンロール","羊、吠える","風と星とメビウスの輪","GIFT","花の匂い"]},
+  {t:"SENSE", y:2010, s:["I","擬態","HOWL","I'm talking about Lovin'","365日","ロックンロールは生きている","ロザリータ","蒼","fanfare","ハル","Prelude","Forever"]},
+  {t:"[(an imitation) blood orange]", y:2012, s:["hypnosis","Marshmallow day","End of the day","常套句","pieces","イミテーションの木","かぞえうた","インマイタウン","過去と未来と交信する男","Happy Song","祈り 〜涙の軌道"]},
+  {t:"REFLECTION {Naked}", y:2015, s:["fantasy","FIGHT CLUB","斜陽","Melody","蜘蛛の糸","I Can Make It","ROLLIN' ROLLING 〜一見は百聞に如かず","放たれる","街の風景","運命","足音 〜Be Strong","忘れ得ぬ人","You make me happy","Jewelry","REM","WALTZ","進化論","幻聴","Reflection","遠くへと","I wanna be there","Starting Over","未完"]},
+  {t:"重力と呼吸", y:2018, s:["Your Song","海にて、心は裸になりたがる","SINGLES","here comes my love","箱庭","addiction","day by day(愛犬クルの物語)","秋がくれた切符","himawari","皮膚呼吸"]},
+  {t:"SOUNDTRACKS", y:2020, s:["DANCING SHOES","Brand new planet","turn over?","君と重ねたモノローグ","losstime","Documentary film","Birthday","others","The song of praise","memories"]},
+  {t:"miss you", y:2023, s:["I MISS YOU","Fifty's map 〜おとなの地図","青いリンゴ","Are you sleeping well without me?","LOST","アート=神の見えざる手","雨の日のパレード","Party is over","We have no time","ケモノミチ","黄昏と積み木","deja-vu","おはよう"]},
+  {t:"産声", y:2026, s:["キングスネークの憂鬱","Again","Saturday","ウスバカゲロウ","Glastonbury","禁断の実","平熱","空也上人","Stupid hero","Nowhere Man 〜喝采が聞こえる","産声","Umbrella","家族"]}
+];
+ALBUMS.forEach((a,i)=>{ a.i=i; a.c=`hsl(${Math.round(i*360/ALBUMS.length)},55%,48%)`; });
+const SONGS = [];
+ALBUMS.forEach(a=>a.s.forEach((title,k)=>SONGS.push({key:a.i+"|"+title,title,album:a.i,no:k+1})));
+const BYKEY = Object.fromEntries(SONGS.map(s=>[s.key,s]));
+
+// ---------- 保存（この端末のブラウザのみ） ----------
+const STORE="mc-album-quiz-v1";
+function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ return {}; } }
+function saveStore(){ try{ localStorage.setItem(STORE,JSON.stringify(store)); }catch(e){} }
+let store = loadStore();
+store.selected = Array.isArray(store.selected) ? store.selected : ALBUMS.map(a=>a.i);
+store.mode   = store.mode   || "album";
+store.count  = store.count  ?? 10;
+store.fcount = store.fcount ?? 3;
+store.blanks = store.blanks ?? 5;
+store.level  = store.level  || "normal";
+store.weak   = store.weak   || {};
+store.total  = store.total  || {c:0,w:0};
+
+let selected = new Set(store.selected);
+let quiz = null;
+let lastRun = null;   // もう一度用
+
+const $ = id=>document.getElementById(id);
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function show(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("active",s.id===id));
+  document.querySelector("header").style.display = id==="start" ? "" : "none";
+  window.scrollTo(0,0);
+}
+function record(song, ok){
+  if(ok){ store.total.c++; delete store.weak[song.key]; }
+  else  { store.total.w++; store.weak[song.key]=true; }
+}
+
+// ---------- 設定画面 ----------
+function renderChips(){
+  const box=$("albumChips"); box.innerHTML="";
+  ALBUMS.forEach(a=>{
+    const b=document.createElement("button");
+    b.className="chip"+(selected.has(a.i)?" on":"");
+    b.style.setProperty("--c",a.c);
+    b.innerHTML=`<span class="dot"></span>${esc(a.t)} <span class="muted" style="font-size:11px">${a.y}</span>`;
+    b.onclick=()=>{ selected.has(a.i)?selected.delete(a.i):selected.add(a.i); persistSel(); renderChips(); };
+    box.appendChild(b);
+  });
+  const n=SONGS.filter(s=>selected.has(s.album)).length;
+  $("poolInfo").textContent = selected.size ? `${selected.size}枚・${n}曲が出題対象です。` : "アルバムを1枚以上選んでください。";
+  $("startBtn").disabled = selected.size===0;
+}
+function persistSel(){ store.selected=[...selected]; saveStore(); }
+document.querySelectorAll("[data-range]").forEach(b=>b.onclick=()=>{
+  const r=b.dataset.range;
+  selected = new Set(ALBUMS.filter(a=> r==="all" ? true : r==="90" ? a.y<2000 : r==="00" ? (a.y>=2000&&a.y<2010) : r==="10" ? a.y>=2010 : false).map(a=>a.i));
+  persistSel(); renderChips();
+});
+function bindSeg(id,key,numeric,cb){
+  const seg=$(id);
+  seg.querySelectorAll("button").forEach(b=>{
+    b.classList.toggle("on", String(store[key])===b.dataset.v);
+    b.onclick=()=>{ store[key]= numeric ? Number(b.dataset.v) : b.dataset.v; saveStore();
+      seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); cb&&cb(); };
+  });
+}
+function renderModeUI(){
+  document.querySelectorAll("[data-for]").forEach(el=>el.style.display = el.dataset.for===store.mode ? "" : "none");
+  $("modeHint").textContent = store.mode==="album"
+    ? "曲名を見て、収録されているアルバムを4択で答えます。"
+    : "アルバムの曲目リストの空欄に、候補から曲を当てはめます。候補には他のアルバムの曲も混ざっています。";
+  const hard = store.level==="hard";
+  $("levelHint").textContent = store.mode==="album"
+    ? (hard ? "発売時期が近いアルバムから選択肢を出します。" : "選択肢のアルバムをランダムに選びます。")
+    : (hard ? "発売時期が近いアルバムの曲を、ダミー候補として5曲混ぜます。" : "他のアルバムの曲を、ダミー候補として3曲混ぜます。");
+}
+function renderStats(){
+  const t=store.total, n=t.c+t.w;
+  $("stAns").textContent=n;
+  $("stRate").textContent = n? Math.round(t.c/n*100)+"%" : "-";
+  const weak=Object.keys(store.weak).filter(k=>BYKEY[k]);
+  $("stWeak").textContent=weak.length;
+  $("weakBtn").disabled = weak.length===0;
+  $("weakBtn").textContent = weak.length ? `苦手な曲だけ復習（${weak.length}曲・曲→アルバム）` : "苦手な曲だけ復習（まだありません）";
+}
+$("resetBtn").onclick=()=>$("resetConfirm").classList.add("show");
+$("resetNo").onclick=()=>$("resetConfirm").classList.remove("show");
+$("resetYes").onclick=()=>{ store.weak={}; store.total={c:0,w:0}; saveStore(); $("resetConfirm").classList.remove("show"); renderStats(); };
+
+// ---------- 共通：次へボタン ----------
+let onNext = null;
+$("nextBtn").onclick=()=>onNext && onNext();
+function bottom(label, fn, disabled){
+  $("nextBtn").textContent=label; $("nextBtn").disabled=!!disabled; onNext=fn; $("bottom").classList.add("show");
+}
+function hideBottom(){ $("bottom").classList.remove("show"); onNext=null; }
+document.querySelectorAll("[data-quit]").forEach(b=>b.onclick=()=>{ closeSheet(); hideBottom(); quiz=null; renderStats(); show("start"); });
+
+// ================= 曲 → アルバム =================
+function buildOptions(song){
+  let pool = (selected.size>=4 ? ALBUMS.filter(a=>selected.has(a.i)) : ALBUMS).filter(a=>a.i!==song.album);
+  let picks;
+  if(store.level==="hard"){
+    const near = pool.slice().sort((a,b)=>Math.abs(a.i-song.album)-Math.abs(b.i-song.album)||Math.random()-.5).slice(0,5);
+    picks = shuffle(near).slice(0,3);
+  }else picks = shuffle(pool.slice()).slice(0,3);
+  return shuffle([ALBUMS[song.album],...picks]);
+}
+function startAlbum(list){
+  if(!list.length) return;
+  quiz={mode:"album",list,idx:0,score:0,streak:0,misses:[],answered:false,total:list.length};
+  $("qTotal").textContent=list.length;
+  show("quiz"); renderQ();
+}
+function renderQ(){
+  const q=quiz, song=q.list[q.idx];
+  q.answered=false;
+  $("qNo").textContent=q.idx+1; $("qScore").textContent=q.score; $("qStreak").textContent=q.streak;
+  $("bar").style.width=(q.idx/q.list.length*100)+"%";
+  $("song").textContent=song.title;
+  const box=$("opts"); box.innerHTML="";
+  buildOptions(song).forEach(a=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.style.setProperty("--c",a.c); b.dataset.i=a.i;
+    b.innerHTML=`<span class="sw"></span><span class="t">${esc(a.t)}</span><span class="y">${a.y}年</span>`;
+    b.onclick=()=>answer(a.i);
+    box.appendChild(b);
+  });
+  $("feedback").className="feedback"; $("feedback").innerHTML="";
+  hideBottom();
+}
+function answer(i){
+  const q=quiz; if(q.answered) return; q.answered=true;
+  const song=q.list[q.idx], ok = i===song.album, a=ALBUMS[song.album];
+  document.querySelectorAll(".opt").forEach(b=>{
+    const bi=Number(b.dataset.i); b.disabled=true;
+    if(bi===song.album) b.classList.add("correct"); else if(bi===i) b.classList.add("wrong"); else b.classList.add("dim");
+  });
+  if(ok){ q.score++; q.streak++; } else { q.streak=0; q.misses.push(song); }
+  record(song,ok); saveStore();
+  $("qScore").textContent=q.score; $("qStreak").textContent=q.streak;
+  const fb=$("feedback");
+  fb.className="feedback show "+(ok?"ok":"ng");
+  fb.innerHTML=`<b>${ok?"○ 正解":"× 不正解"}</b><div class="detail">『${esc(a.t)}』（${a.y}年）の${song.no}曲目／全${a.s.length}曲</div>`;
+  $("bar").style.width=((q.idx+1)/q.list.length*100)+"%";
+  bottom(q.idx+1<q.list.length ? "次へ" : "結果を見る", ()=>{ q.idx++; q.idx<q.list.length ? renderQ() : finish(); });
+  requestAnimationFrame(()=>fb.scrollIntoView({behavior:"smooth",block:"center"}));
+}
+
+// ================= 収録曲の穴埋め =================
+// rounds: [{album, forced:[trackIdx...]}]
+function startFill(rounds){
+  if(!rounds.length) return;
+  quiz={mode:"fill",rounds,idx:0,score:0,done:0,misses:[],missRounds:{},total:0};
+  $("fTotal").textContent=rounds.length;
+  show("fill"); setupRound();
+}
+function pickDummies(albumIdx, n){
+  const hard = store.level==="hard";
+  let pool = SONGS.filter(s=>s.album!==albumIdx);
+  if(hard){
+    const near = ALBUMS.map(a=>a.i).filter(i=>i!==albumIdx).sort((a,b)=>Math.abs(a-albumIdx)-Math.abs(b-albumIdx)).slice(0,3);
+    pool = pool.filter(s=>near.includes(s.album));
+  }
+  return shuffle(pool.slice()).slice(0,n);
+}
+function setupRound(){
+  const q=quiz, r=q.rounds[q.idx], a=ALBUMS[r.album];
+  const n = Math.min(store.blanks, a.s.length-1);
+  let blanks = (r.forced||[]).slice(0,n);
+  const rest = shuffle(a.s.map((_,i)=>i).filter(i=>!blanks.includes(i)));
+  blanks = blanks.concat(rest.slice(0, n-blanks.length)).sort((x,y)=>x-y);
+  const answers = blanks.map(i=>SONGS.find(s=>s.album===r.album && s.no===i+1));
+  const dummies = pickDummies(r.album, store.level==="hard" ? 5 : 3);
+  q.cur = { album:r.album, blanks, fills:{}, cands:shuffle(answers.concat(dummies)), sel:blanks[0], checked:false };
+  $("fNo").textContent=q.idx+1; $("fScore").textContent=q.score; $("fDone").textContent=q.done;
+  $("fbar").style.width=(q.idx/q.rounds.length*100)+"%";
+  const h=$("fHead"); h.style.setProperty("--c",a.c);
+  h.innerHTML=`<span class="sw"></span><div><div class="t">${esc(a.t)}</div><div class="y">${a.y}年・全${a.s.length}曲</div></div>`;
+  $("fNote").textContent=`空欄（${blanks.length}か所）をタップして、入る曲を選んでください。`;
+  $("fFeedback").className="feedback"; $("fFeedback").innerHTML="";
+  renderTracks(); updateCheckBtn();
+}
+function renderTracks(){
+  const c=quiz.cur, a=ALBUMS[c.album], ul=$("fTracks"); ul.innerHTML="";
+  a.s.forEach((title,i)=>{
+    const li=document.createElement("li");
+    li.innerHTML=`<span class="no">${i+1}</span>`;
+    if(!c.blanks.includes(i)){
+      const sp=document.createElement("span"); sp.className="fixed"; sp.textContent=title; li.appendChild(sp);
+    }else{
+      const b=document.createElement("button"); b.className="slot";
+      const k=c.fills[i];
+      if(c.checked){
+        b.disabled=true;
+        const ok = k===a.i+"|"+title;
+        b.classList.add(ok?"ok":"ng");
+        b.innerHTML = ok ? `<span class="ans">○ ${esc(title)}</span>`
+          : `<span class="yours">${esc(BYKEY[k].title)}</span><span class="ans">→ ${esc(title)}</span>`;
+      }else{
+        if(k){ b.classList.add("filled"); b.textContent=BYKEY[k].title; } else b.textContent="？ タップして選ぶ";
+        if(c.sel===i) b.classList.add("active");
+        b.onclick=()=>{ c.sel=i; renderTracks(); openSheet(i); };
+      }
+      li.appendChild(b);
+    }
+    ul.appendChild(li);
+  });
+}
+function openSheet(i){
+  const c=quiz.cur;
+  $("sheetTitle").textContent=`${i+1}曲目に入る曲は？`;
+  const box=$("cands"); box.innerHTML="";
+  c.cands.forEach(s=>{
+    const usedAt = Object.keys(c.fills).find(t=>c.fills[t]===s.key);
+    const b=document.createElement("button");
+    b.className="cand"+(usedAt!==undefined && Number(usedAt)!==i ? " is-used":"");
+    b.innerHTML=`<span>${esc(s.title)}</span>${usedAt!==undefined ? `<span class="used">${Number(usedAt)+1}曲目に使用中</span>`:""}`;
+    b.onclick=()=>{
+      if(usedAt!==undefined) delete c.fills[usedAt];
+      c.fills[i]=s.key;
+      const next = c.blanks.find(t=>!c.fills[t]);
+      closeSheet();
+      c.sel = next ?? i;
+      renderTracks(); updateCheckBtn();
+      if(next!==undefined) setTimeout(()=>openSheet(next),120);
+    };
+    box.appendChild(b);
+  });
+  if(c.fills[i]){
+    const b=document.createElement("button"); b.className="cand clear"; b.textContent="空欄に戻す";
+    b.onclick=()=>{ delete c.fills[i]; closeSheet(); renderTracks(); updateCheckBtn(); };
+    box.appendChild(b);
+  }
+  box.scrollTop=0;
+  $("sheet").classList.add("show"); $("sheetBg").classList.add("show"); document.body.classList.add("noscroll");
+}
+function closeSheet(){ $("sheet").classList.remove("show"); $("sheetBg").classList.remove("show"); document.body.classList.remove("noscroll"); }
+$("sheetClose").onclick=closeSheet; $("sheetBg").onclick=closeSheet;
+function updateCheckBtn(){
+  const c=quiz.cur, left=c.blanks.filter(t=>!c.fills[t]).length;
+  bottom(left ? `答え合わせ（あと${left}か所）` : "答え合わせ", checkRound, left>0);
+}
+function checkRound(){
+  const q=quiz, c=q.cur, a=ALBUMS[c.album];
+  c.checked=true; let ok=0;
+  c.blanks.forEach(i=>{
+    const song=SONGS.find(s=>s.album===a.i && s.no===i+1);
+    const hit = c.fills[i]===song.key;
+    if(hit) ok++; else { q.misses.push(song); (q.missRounds[a.i] ||= []).push(i); }
+    record(song,hit);
+  });
+  saveStore();
+  q.score+=ok; q.done+=c.blanks.length; q.total=q.done;
+  $("fScore").textContent=q.score; $("fDone").textContent=q.done;
+  $("fbar").style.width=((q.idx+1)/q.rounds.length*100)+"%";
+  renderTracks();
+  const fb=$("fFeedback"), all = ok===c.blanks.length;
+  fb.className="feedback show "+(all?"ok":"ng");
+  fb.innerHTML=`<b>${all?"○ 全問正解":`${ok} / ${c.blanks.length} 正解`}</b>`;
+  bottom(q.idx+1<q.rounds.length ? "次のアルバムへ" : "結果を見る", ()=>{ q.idx++; q.idx<q.rounds.length ? (setupRound(), window.scrollTo(0,0)) : finish(); });
+  requestAnimationFrame(()=>fb.scrollIntoView({behavior:"smooth",block:"center"}));
+}
+
+// ---------- 開始 ----------
+function runNormal(){
+  if(store.mode==="album"){
+    const pool=shuffle(SONGS.filter(s=>selected.has(s.album)));
+    const n = store.count ? Math.min(store.count,pool.length) : pool.length;
+    lastRun=runNormal; startAlbum(pool.slice(0,n));
+  }else{
+    const albums=shuffle(ALBUMS.filter(a=>selected.has(a.i)).map(a=>a.i));
+    const n = store.fcount ? Math.min(store.fcount,albums.length) : albums.length;
+    lastRun=runNormal; startFill(albums.slice(0,n).map(i=>({album:i,forced:[]})));
+  }
+}
+function runWeak(){
+  lastRun=runWeak; startAlbum(shuffle(SONGS.filter(s=>store.weak[s.key])));
+}
+$("startBtn").onclick=runNormal;
+$("weakBtn").onclick=runWeak;
+
+// ---------- 結果 ----------
+function finish(){
+  hideBottom(); closeSheet();
+  const q=quiz, n = q.mode==="album" ? q.list.length : q.done, rate = n ? q.score/n : 0;
+  $("rScore").innerHTML=`${q.score}<small> / ${n}</small>`;
+  $("rMsg").textContent = rate===1 ? "全問正解です。お見事です。"
+    : rate>=.8 ? "かなりの精度です。"
+    : rate>=.5 ? "まずまずです。間違えた曲を復習してみてください。"
+    : "伸びしろがあります。繰り返すと覚えられます。";
+  const ul=$("missList"); ul.innerHTML="";
+  q.misses.forEach(s=>{ const a=ALBUMS[s.album];
+    const li=document.createElement("li");
+    li.innerHTML=`<div class="s">${esc(s.title)}</div><div class="a">→ ${esc(a.t)}（${a.y}年）${s.no}曲目</div>`;
+    ul.appendChild(li); });
+  $("missCard").style.display = q.misses.length ? "" : "none";
+  $("retryMissBtn").style.display = q.misses.length ? "" : "none";
+  $("retryMissBtn").textContent = q.mode==="album" ? "間違えた曲だけもう一度" : "間違えたアルバムをもう一度";
+  show("result");
+}
+$("againBtn").onclick=()=>{
+  if(lastRun===runWeak && !Object.keys(store.weak).length){ renderStats(); show("start"); return; }
+  (lastRun||runNormal)();
+};
+$("retryMissBtn").onclick=()=>{
+  const q=quiz;
+  if(q.mode==="album") startAlbum(shuffle(q.misses.slice()));
+  else startFill(shuffle(Object.keys(q.missRounds).map(k=>({album:Number(k),forced:q.missRounds[k]}))));
+};
+$("homeBtn").onclick=()=>{ quiz=null; renderStats(); show("start"); };
+
+// ---------- 初期化 ----------
+bindSeg("modeSeg","mode",false,renderModeUI);
+bindSeg("countSeg","count",true);
+bindSeg("fcountSeg","fcount",true);
+bindSeg("blanksSeg","blanks",true);
+bindSeg("levelSeg","level",false,renderModeUI);
+renderModeUI(); renderChips(); renderStats();
+</script>
+</body>
+</html>
